@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - release
+      - dev
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.x'
+
+      - name: Install Pipenv
+        run: |
+          pip install pipenv
+
+      - name: Build
+        run: |
+          pipenv --python python3 sync
+
+      - name: Test
+        run: |
+          pipenv run pytest
+
+  package:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Package
+        run: |
+          zip -r spark-batch-data-load-to-kafka.zip lib
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/release'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_VM_KEY }}
+
+      - name: Release to QA
+        run: |
+          scp -o StrictHostKeyChecking=no -r spark-batch-data-load-to-kafka.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
+
+  deploy:
+    needs: package
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_VM_KEY }}
+
+      - name: Deploy to Production
+        run: |
+          scp -o StrictHostKeyChecking=no -r spark-batch-data-load-to-kafka.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-prod
