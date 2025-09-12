@@ -77,7 +77,7 @@ jobs:
 
       - name: Release to QA
         run: |
-          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
 
   deploy:
     needs: package
@@ -100,4 +100,4 @@ jobs:
 
       - name: Deploy to Production
         run: |
-          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-prod
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/sbdl-prod
