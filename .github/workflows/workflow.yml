@@ -2,10 +2,6 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - release
-      - dev
 
 jobs:
   build-and-test:
@@ -18,11 +14,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11.x'
+          python-version: '3.11'
 
       - name: Install Pipenv
         run: |
           pip install pipenv
+
+      - name: Generate Pipfile.lock
+        run: |
+          pipenv lock
 
       - name: Build
         run: |
@@ -43,7 +43,18 @@ jobs:
 
       - name: Package
         run: |
-          zip -r spark-batch-data-load-to-kafka.zip lib
+          zip -r sbdl.zip lib
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-artifacts
+          path: |
+            sbdl.zip
+            log4j.properties
+            sbdl_main.py
+            sbdl_submit.sh
+            conf
 
   release:
     needs: package
@@ -54,14 +65,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package-artifacts
+
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_VM_KEY }}
 
+      - name: Create QA directory on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-qa && chmod 755 /home/ubuntu/sbdl-qa'
+
       - name: Release to QA
         run: |
-          scp -o StrictHostKeyChecking=no -r spark-batch-data-load-to-kafka.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/ubuntu/sbdl-qa
 
   deploy:
     needs: package
@@ -72,11 +92,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package-artifacts
+
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.EC2_VM_KEY }}
 
+      - name: Create Prod directory on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-prod && chmod 755 /home/ubuntu/sbdl-prod'
+
       - name: Deploy to Production
         run: |
-          scp -o StrictHostKeyChecking=no -r spark-batch-data-load-to-kafka.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-prod
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/ubuntu/sbdl-prod
