@@ -75,9 +75,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_VM_KEY }}
 
+      - name: Create QA directory on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-qa && chmod 755 /home/ubuntu/sbdl-qa'
+
       - name: Release to QA
         run: |
-          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/ubuntu/sbdl-qa
 
   deploy:
     needs: package
@@ -98,6 +102,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_VM_KEY }}
 
+      - name: Create Prod directory on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-prod && chmod 755 /home/ubuntu/sbdl-prod'
+
       - name: Deploy to Production
         run: |
-          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/sbdl-prod
+          scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/ubuntu/sbdl-prod
