@@ -79,6 +79,7 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties sbdl_main.py sbdl_submit.sh conf ec2-user@${{ vars.EC2_VM_IP }}:/home/sbdl-qa
 
+
   deploy:
     needs: package
     runs-on: ubuntu-latest
@@ -87,6 +88,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
