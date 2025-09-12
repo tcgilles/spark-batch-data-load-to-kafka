@@ -18,11 +18,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11.x'
+          python-version: '3.11'
 
       - name: Install Pipenv
         run: |
           pip install pipenv
+
+      - name: Generate Pipfile.lock
+        run: |
+          pipenv lock
 
       - name: Build
         run: |
