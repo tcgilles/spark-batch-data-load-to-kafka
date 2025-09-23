@@ -18,3 +18,4 @@ def get_spark_session(env):
             .config(conf=get_spark_conf(env)) \
             .enableHiveSupport() \
             .getOrCreate()
+  
