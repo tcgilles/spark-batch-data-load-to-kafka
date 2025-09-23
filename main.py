@@ -1,7 +1,7 @@
 import sys
 import uuid
 from typing import Any
-
+import pyspark.sql
 from lib import utils, config_loader
 import lib.transformations as tr
 from lib.logger import Log4j
@@ -51,3 +51,18 @@ if __name__ == '__main__':
     parties_df = tr.load_dataframe(spark, hive_db, PARTIES_SCHEMA,
                                    "./test_data/parties/party_samples.csv")
     logger.info("Finished loading data")
+
+    logger.info("Transforming the tables")
+    logger.info("Transforming accounts")
+    cleaned_accounts_df: pyspark.sql.DataFrame = tr.prepare_accounts_df(accounts_df)
+    logger.info("Transforming address")
+    cleaned_address_df: pyspark.sql.DataFrame = tr.prepare_address_df(address_df)
+    logger.info("Transforming parties")
+    cleaned_parties_df: pyspark.sql.DataFrame = tr.prepare_parties_df(parties_df)
+    logger.info("Joining the 3 tables")
+    complete_table_df: pyspark.sql.DataFrame = tr.reconstruct_full_table(
+        cleaned_parties_df, cleaned_address_df, cleaned_accounts_df
+    )
+    logger.info("Formatting table in kafka suitable schema")
+    kafka_df: pyspark.sql.DataFrame = tr.build_kafka_table(complete_table_df)
+    logger.info("Finished transforming the tables")
