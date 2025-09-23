@@ -3,7 +3,23 @@ import uuid
 from typing import Any
 
 from lib import utils, config_loader
+import lib.transformations as tr
 from lib.logger import Log4j
+
+
+ACCOUNTS_SCHEMA: str = """
+    load_date date, active_ind tinyint, account_id bigint, source_sys string,
+    account_start_date string, legal_title_1 string, legal_title_2 string,
+    tax_id_type string, tax_id string, branch_code string, country string
+"""
+ADDRESS_SCHEMA: str = """
+    load_date date, party_id bigint, address_line_1 string, address_line_2 string,
+    city string, postal_code string, country_of_address string, address_start_date date
+"""
+PARTIES_SCHEMA = """
+    load_date date, account_id bigint, party_id bigint, relation_type string,
+    relation_start_date string
+"""
 
 if __name__ == '__main__':
 
@@ -17,10 +33,21 @@ if __name__ == '__main__':
 
     print("Initializing SBDL Job in " + job_run_env + " Job ID: " + job_run_id)
     conf: dict[str, Any] = config_loader.get_config(job_run_env)
-    enable_hive: bool = True if conf["enable.hive"] == "true" else False
     hive_db: str = conf["hive.database"]
 
     print("Creating Spark Session")
     spark = utils.get_spark_session(job_run_env)
     logger = Log4j(spark)
     logger.info("Finished creating Spark Session")
+
+    logger.info("Loading the data")
+    logger.info("Loading accounts")
+    accounts_df = tr.load_dataframe(spark, hive_db, ACCOUNTS_SCHEMA,
+                                    "./test_data/accounts/party_samples.csv")
+    logger.info("Loading addresses")
+    address_df = tr.load_dataframe(spark, hive_db, ADDRESS_SCHEMA,
+                                    "./test_data/party_address/address_samples.csv")
+    logger.info("Loading parties")
+    parties_df = tr.load_dataframe(spark, hive_db, PARTIES_SCHEMA,
+                                   "./test_data/parties/party_samples.csv")
+    logger.info("Finished loading data")
