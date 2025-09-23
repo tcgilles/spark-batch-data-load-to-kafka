@@ -1,8 +1,9 @@
+import pyspark.sql
 from pyspark.sql import SparkSession
 from lib.config_loader import get_spark_conf
 
 
-def get_spark_session(env):
+def get_spark_session(env: str) -> pyspark.sql.SparkSession:
     if env == "LOCAL":
         return SparkSession.builder \
             .config(conf=get_spark_conf(env)) \
