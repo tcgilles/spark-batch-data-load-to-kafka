@@ -44,13 +44,13 @@ if __name__ == '__main__':
     logger.info("Loading the data")
     logger.info("Loading accounts")
     accounts_df = tr.load_dataframe(spark, hive_db, ACCOUNTS_SCHEMA,
-                                    "./test_data/accounts/party_samples.csv")
+                                    "./test_data/accounts/")
     logger.info("Loading addresses")
     address_df = tr.load_dataframe(spark, hive_db, ADDRESS_SCHEMA,
-                                    "./test_data/party_address/address_samples.csv")
+                                    "./test_data/party_address/")
     logger.info("Loading parties")
     parties_df = tr.load_dataframe(spark, hive_db, PARTIES_SCHEMA,
-                                   "./test_data/parties/party_samples.csv")
+                                   "./test_data/parties/")
     logger.info("Finished loading data")
 
     logger.info("Transforming the tables")

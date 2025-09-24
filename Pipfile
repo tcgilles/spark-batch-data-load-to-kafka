@@ -6,6 +6,10 @@ name = "pypi"
 [packages]
 pyspark = "==3.5.6"
 pytest = "*"
+chispa = "*"
+nutter = "*"
+faker = "*"
+runtime = "*"
 
 [dev-packages]
 
