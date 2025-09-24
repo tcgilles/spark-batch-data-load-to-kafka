@@ -2,6 +2,7 @@ import sys
 import uuid
 from typing import Any
 import pyspark.sql
+import pyspark.sql.functions as f
 from lib import utils, config_loader
 import lib.transformations as tr
 from lib.logger import Log4j
@@ -16,7 +17,7 @@ ADDRESS_SCHEMA: str = """
     load_date date, party_id bigint, address_line_1 string, address_line_2 string,
     city string, postal_code string, country_of_address string, address_start_date date
 """
-PARTIES_SCHEMA = """
+PARTIES_SCHEMA: str = """
     load_date date, account_id bigint, party_id bigint, relation_type string,
     relation_start_date string
 """
@@ -65,4 +66,8 @@ if __name__ == '__main__':
     )
     logger.info("Formatting table in kafka suitable schema")
     kafka_df: pyspark.sql.DataFrame = tr.build_kafka_table(complete_table_df)
+    kafka_kv_df: pyspark.sql.DataFrame = kafka_df.select(
+        f.col("payload.contractIdentifier.newValue").alias("key"),
+        f.to_json(f.struct("*")).alias("value")
+    )
     logger.info("Finished transforming the tables")
