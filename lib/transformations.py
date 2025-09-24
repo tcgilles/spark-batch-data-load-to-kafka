@@ -5,7 +5,8 @@ def build_field_struct(df_col: pyspark.sql.Column,
                        col_alias: str) -> pyspark.sql.Column:
     return f.struct(
         f.lit("INSERT").alias("operation"),
-        df_col.alias("newValue")
+        df_col.alias("newValue"),
+        f.lit(None).alias("oldValue")
     ).alias(col_alias)
 
 def load_dataframe(spark: pyspark.sql.SparkSession,
