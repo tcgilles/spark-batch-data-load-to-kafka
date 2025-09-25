@@ -1,6 +1,25 @@
 import pyspark.sql
 import pyspark.sql.functions as f
 
+def get_accounts_schema() -> str:
+    return """
+        load_date date, active_ind tinyint, account_id string, source_sys string,
+        account_start_date timestamp, legal_title_1 string, legal_title_2 string,
+        tax_id_type string, tax_id string, branch_code string, country string
+    """
+
+def get_address_schema() -> str:
+    return """
+        load_date date, party_id string, address_line_1 string, address_line_2 string,
+        city string, postal_code string, country_of_address string, address_start_date date
+    """
+
+def get_parties_schema() -> str:
+    return """
+        load_date date, account_id string, party_id string, relation_type string,
+        relation_start_date timestamp
+    """
+
 def build_field_struct(df_col: pyspark.sql.Column,
                        col_alias: str) -> pyspark.sql.Column:
     return f.struct(

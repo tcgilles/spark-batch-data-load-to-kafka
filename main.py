@@ -7,21 +7,6 @@ from lib import utils, config_loader
 import lib.transformations as tr
 from lib.logger import Log4j
 
-
-ACCOUNTS_SCHEMA: str = """
-    load_date date, active_ind tinyint, account_id bigint, source_sys string,
-    account_start_date string, legal_title_1 string, legal_title_2 string,
-    tax_id_type string, tax_id string, branch_code string, country string
-"""
-ADDRESS_SCHEMA: str = """
-    load_date date, party_id bigint, address_line_1 string, address_line_2 string,
-    city string, postal_code string, country_of_address string, address_start_date date
-"""
-PARTIES_SCHEMA: str = """
-    load_date date, account_id bigint, party_id bigint, relation_type string,
-    relation_start_date string
-"""
-
 if __name__ == '__main__':
 
     if len(sys.argv) < 3:
@@ -43,14 +28,17 @@ if __name__ == '__main__':
 
     logger.info("Loading the data")
     logger.info("Loading accounts")
-    accounts_df = tr.load_dataframe(spark, hive_db, ACCOUNTS_SCHEMA,
-                                    "./test_data/accounts/")
+    accounts_df: pyspark.sql.DataFrame = tr.load_dataframe(spark, hive_db,
+                                                           tr.get_accounts_schema(),
+                                                           "./test_data/accounts/")
     logger.info("Loading addresses")
-    address_df = tr.load_dataframe(spark, hive_db, ADDRESS_SCHEMA,
-                                    "./test_data/party_address/")
+    address_df: pyspark.sql.DataFrame = tr.load_dataframe(spark, hive_db,
+                                                          tr.get_address_schema(),
+                                                          "./test_data/party_address/")
     logger.info("Loading parties")
-    parties_df = tr.load_dataframe(spark, hive_db, PARTIES_SCHEMA,
-                                   "./test_data/parties/")
+    parties_df: pyspark.sql.DataFrame = tr.load_dataframe(spark, hive_db,
+                                                          tr.get_parties_schema(),
+                                                          "./test_data/parties/")
     logger.info("Finished loading data")
 
     logger.info("Transforming the tables")
