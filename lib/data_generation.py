@@ -26,13 +26,12 @@ def gen_accounts_df(spark: pyspark.sql.SparkSession,
         choice(TAX_ID_TYPE),
         fake.bban()
         ) + (choice(branch))
-        for i in range(num_records)
+        for i in range(1, num_records)
     ]
     return spark.createDataFrame(data_list) \
         .toDF("load_date", "active_ind", "account_id", "source_sys",
               "account_start_date", "legal_title_1", "legal_title_2",
               "tax_id_type", "tax_id", "branch_code", "country")
-
 
 def gen_account_party(spark: pyspark.sql.SparkSession,
                       load_date: str,
@@ -43,7 +42,7 @@ def gen_account_party(spark: pyspark.sql.SparkSession,
         PART_ID_OFFSET + i,
         "F-N",
         fake.date_time_between(start_date='-5y', end_date='-3y')
-    ) for i in range(num_records)]
+    ) for i in range(1, num_records)]
 
     data_list_s: list[tuple] = [(
         load_date,
@@ -51,12 +50,11 @@ def gen_account_party(spark: pyspark.sql.SparkSession,
         PART_ID_OFFSET + num_records + i,
         "F-S",
         fake.date_time_between(start_date='-5y', end_date='-3y')
-    ) for i in range(num_records // 3)]
+    ) for i in range(1, num_records // 3)]
 
     return spark.createDataFrame(data_list_f + data_list_s) \
         .toDF("load_date", "account_id", "party_id",
               "relation_type", "relation_start_date")
-
 
 def gen_party_address(spark: pyspark.sql.SparkSession,
                       load_date: str,
@@ -70,12 +68,11 @@ def gen_party_address(spark: pyspark.sql.SparkSession,
         fake.postcode(),
         choice(COUNTRY),
         fake.date_between(start_date='-5y', end_date='-3y')
-    ) for i in range(num_records)]
+    ) for i in range(1, num_records)]
 
     return spark.createDataFrame(data_list_f) \
         .toDF("load_date", "party_id", "address_line_1", "address_line_2",
               "city", "postal_code", "country_of_address", "address_start_date")
-
 
 def create_data_files(spark: pyspark.sql.SparkSession,
                       load_date: str,
