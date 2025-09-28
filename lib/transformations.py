@@ -1,7 +1,11 @@
+"""Transformation module for processing and transforming data using PySpark."""
 import pyspark.sql
 import pyspark.sql.functions as f
 
 def get_accounts_schema() -> str:
+    """
+    Returns the schema for the accounts data as a string.
+    """
     return """
         load_date date, active_ind tinyint, account_id string, source_sys string,
         account_start_date timestamp, legal_title_1 string, legal_title_2 string,
@@ -9,12 +13,18 @@ def get_accounts_schema() -> str:
     """
 
 def get_address_schema() -> str:
+    """
+    Returns the schema for the party address data as a string.
+    """
     return """
         load_date date, party_id string, address_line_1 string, address_line_2 string,
         city string, postal_code string, country_of_address string, address_start_date date
     """
 
 def get_parties_schema() -> str:
+    """
+    Returns the schema for the parties data as a string.
+    """
     return """
         load_date date, account_id string, party_id string, relation_type string,
         relation_start_date timestamp
@@ -22,6 +32,14 @@ def get_parties_schema() -> str:
 
 def build_field_struct(df_col: pyspark.sql.Column,
                        col_alias: str) -> pyspark.sql.Column:
+    """
+    Build a struct column with operation, newValue, and oldValue fields.
+    Args:
+        df_col (pyspark.sql.Column): The column to be wrapped in the struct.
+        col_alias (str): The alias for the resulting struct column.
+    Returns:
+        pyspark.sql.Column: A struct column with the specified alias.
+    """
     return f.struct(
         f.lit("INSERT").alias("operation"),
         df_col.alias("newValue"),
@@ -33,6 +51,16 @@ def load_dataframe(spark: pyspark.sql.SparkSession,
                    schema: str = "",
                    filepath: str = ""
                    ) -> pyspark.sql.DataFrame:
+    """
+    Load a DataFrame from either a Hive table or a CSV file based on the provided parameters.
+    Args:
+        spark (pyspark.sql.SparkSession): The Spark session.
+        hive_db (str, optional): The Hive database name. If provided, data will be loaded from Hive.
+        schema (str): The schema for the CSV file if loading from a file.
+        filepath (str): The file path for the CSV file if loading from a file.
+    Returns:
+        pyspark.sql.DataFrame: The loaded DataFrame.
+    """
     if hive_db:
         return spark.sql("select * from {db}.parties",
                          db=hive_db)
@@ -45,6 +73,13 @@ def load_dataframe(spark: pyspark.sql.SparkSession,
                 .load(filepath)
 
 def prepare_accounts_df(account_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Prepare the accounts DataFrame by transforming and structuring its fields.
+    Args:
+        account_df (pyspark.sql.DataFrame): The input accounts DataFrame.
+    Returns:
+        pyspark.sql.DataFrame: The transformed accounts DataFrame.
+    """
     legal_titles_array: pyspark.sql.Column = f.array_compact(
         f.array(
             f.when(
@@ -78,6 +113,13 @@ def prepare_accounts_df(account_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFr
     )
 
 def prepare_address_df(address_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Prepare the party address DataFrame by transforming and structuring its fields.
+    Args:
+        address_df (pyspark.sql.DataFrame): The input party address DataFrame.
+    Returns:
+        pyspark.sql.DataFrame: The transformed party address DataFrame.
+    """
     address_struct: pyspark.sql.Column = f.struct(
         f.col("address_line_1").alias("addressLine1"),
         f.col("address_line_2").alias("addressLine2"),
@@ -92,6 +134,13 @@ def prepare_address_df(address_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFra
     )
 
 def prepare_parties_df(party_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Prepare the parties DataFrame by transforming and structuring its fields.
+    Args:
+        party_df (pyspark.sql.DataFrame): The input parties DataFrame.
+    Returns:
+        pyspark.sql.DataFrame: The transformed parties DataFrame.
+    """
     return party_df.select(
         "account_id",
         "party_id",
@@ -103,6 +152,15 @@ def reconstruct_full_table(party_df: pyspark.sql.DataFrame,
                            address_df: pyspark.sql.DataFrame,
                            account_df: pyspark.sql.DataFrame
                            ) -> pyspark.sql.DataFrame:
+    """
+    Reconstruct the full table by joining parties, addresses, and accounts DataFrames.
+    Args:
+        party_df (pyspark.sql.DataFrame): The parties DataFrame.
+        address_df (pyspark.sql.DataFrame): The party address DataFrame.
+        account_df (pyspark.sql.DataFrame): The accounts DataFrame.
+    Returns:
+        pyspark.sql.DataFrame: The reconstructed full DataFrame.
+    """
     party_address_df: pyspark.sql.DataFrame = party_df.join(
         f.broadcast(address_df),
         "party_id",
@@ -130,6 +188,13 @@ def reconstruct_full_table(party_df: pyspark.sql.DataFrame,
     )
 
 def build_kafka_table(full_df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Build the Kafka table by structuring the full DataFrame into the required format.
+    Args:
+        full_df (pyspark.sql.DataFrame): The full DataFrame to be transformed.
+    Returns:
+        pyspark.sql.DataFrame: The transformed DataFrame suitable for Kafka.
+    """
     event_header_struct: pyspark.sql.Column = f.struct(
         f.expr("uuid()").alias("eventIdentifier"),
         f.lit("SBDL-Contract").alias("eventType"),

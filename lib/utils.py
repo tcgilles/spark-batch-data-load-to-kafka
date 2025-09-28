@@ -1,9 +1,17 @@
+"""Utility functions for Spark session management."""
 import pyspark.sql
 from pyspark.sql import SparkSession
 from lib.config_loader import get_spark_conf
 
 
 def get_spark_session(env: str) -> pyspark.sql.SparkSession:
+    """
+    Create and return a SparkSession based on the specified environment.
+    Args:
+        env (str): The environment name (e.g., 'LOCAL', 'QA', 'PROD').
+    Returns:
+        pyspark.sql.SparkSession: A configured SparkSession object.
+    """
     if env == "LOCAL":
         return SparkSession.builder \
             .config(conf=get_spark_conf(env)) \

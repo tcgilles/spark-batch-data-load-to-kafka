@@ -1,3 +1,4 @@
+"""Data generation module for creating synthetic datasets for testing."""
 from random import choice, choices
 import pyspark.sql
 from faker import Faker
@@ -14,6 +15,15 @@ COUNTRY: list[str] = ["United States", "Canada", "Mexico"]
 def gen_accounts_df(spark: pyspark.sql.SparkSession,
                     load_date: str,
                     num_records: int) -> pyspark.sql.DataFrame:
+    """
+    Generate a synthetic accounts DataFrame.
+    Args:
+        spark (pyspark.sql.SparkSession): The Spark session.
+        load_date (str): The load date for the records.
+        num_records (int): The number of records to generate.
+    Returns:
+        pyspark.sql.DataFrame: A DataFrame containing synthetic account data.
+    """
     branch: list[tuple[str, str]] = [(fake.swift8(), choice(COUNTRY)) for r in range(1, 20)]
     data_list: list[tuple] = [(
         load_date,
@@ -36,6 +46,15 @@ def gen_accounts_df(spark: pyspark.sql.SparkSession,
 def gen_account_party(spark: pyspark.sql.SparkSession,
                       load_date: str,
                       num_records: int) -> pyspark.sql.DataFrame:
+    """
+    Generate a synthetic account-party relationship DataFrame.
+    Args:
+        spark (pyspark.sql.SparkSession): The Spark session.
+        load_date (str): The load date for the records.
+        num_records (int): The number of records to generate.
+    Returns:
+        pyspark.sql.DataFrame: A DataFrame containing synthetic account-party relationships.
+    """
     data_list_f: list[tuple] = [(
         load_date,
         ACCOUNT_ID_OFFSET + i,
@@ -59,6 +78,15 @@ def gen_account_party(spark: pyspark.sql.SparkSession,
 def gen_party_address(spark: pyspark.sql.SparkSession,
                       load_date: str,
                       num_records: int) -> pyspark.sql.DataFrame:
+    """
+    Generate a synthetic party address DataFrame.
+    Args:
+        spark (pyspark.sql.SparkSession): The Spark session.
+        load_date (str): The load date for the records.
+        num_records (int): The number of records to generate.
+    Returns:
+        pyspark.sql.DataFrame: A DataFrame containing synthetic party address data.
+    """
     data_list_f: list[tuple] = [(
         load_date,
         PART_ID_OFFSET + i,
@@ -77,6 +105,15 @@ def gen_party_address(spark: pyspark.sql.SparkSession,
 def create_data_files(spark: pyspark.sql.SparkSession,
                       load_date: str,
                       num_records: int) -> None:
+    """
+    Create synthetic data files for accounts, parties, and addresses.
+    Args:
+        spark (pyspark.sql.SparkSession): The Spark session.
+        load_date (str): The load date for the records.
+        num_records (int): The number of records to generate for each dataset.
+    Returns:
+        None
+    """
     accounts_df: pyspark.sql.DataFrame = gen_accounts_df(spark, load_date, num_records)
     accounts_df.coalesce(1) \
         .write \
