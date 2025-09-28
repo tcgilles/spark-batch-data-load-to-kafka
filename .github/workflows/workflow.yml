@@ -79,6 +79,12 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-qa && chmod 755 /home/ubuntu/sbdl-qa'
 
+      - name: Set environment variables on QA server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_KEY=${{ secrets.QA_KAFKA_API_KEY }}" > /home/ubuntu/sbdl-qa/.env'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_SECRET=${{ secrets.QA_KAFKA_API_SECRET }}" >> /home/ubuntu/sbdl-qa/.env'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'chmod 600 /home/ubuntu/sbdl-qa/.env'
+
       - name: Release to QA
         run: |
           scp -o StrictHostKeyChecking=no -r sbdl.zip log4j.properties main.py sbdl_submit.sh conf ubuntu@${{ vars.EC2_VM_IP }}:/home/ubuntu/sbdl-qa
@@ -105,6 +111,12 @@ jobs:
       - name: Create Prod directory on remote server
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'mkdir -p /home/ubuntu/sbdl-prod && chmod 755 /home/ubuntu/sbdl-prod'
+
+      - name: Set environment variables on Prod server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_KEY=${{ secrets.PRDO_KAFKA_API_KEY }}" > /home/ubuntu/sbdl-prod/.env'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_SECRET=${{ secrets.PROD_KAFKA_API_SECRET }}" >> /home/ubuntu/sbdl-prod/.env'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'chmod 600 /home/ubuntu/sbdl-prod/.env'
 
       - name: Deploy to Production
         run: |
