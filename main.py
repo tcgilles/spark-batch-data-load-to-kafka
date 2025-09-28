@@ -1,3 +1,4 @@
+"""Main ETL job for SBDL project - Extract, Transform and Load data into Kafka topic"""
 import sys
 import os
 import uuid
