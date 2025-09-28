@@ -114,7 +114,7 @@ jobs:
 
       - name: Set environment variables on Prod server
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_KEY=${{ secrets.PRDO_KAFKA_API_KEY }}" > /home/ubuntu/sbdl-prod/.env'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_KEY=${{ secrets.PROD_KAFKA_API_KEY }}" > /home/ubuntu/sbdl-prod/.env'
           ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'echo "KAFKA_API_SECRET=${{ secrets.PROD_KAFKA_API_SECRET }}" >> /home/ubuntu/sbdl-prod/.env'
           ssh -o StrictHostKeyChecking=no ubuntu@${{ vars.EC2_VM_IP }} 'chmod 600 /home/ubuntu/sbdl-prod/.env'
 
