@@ -1,11 +1,18 @@
 import sys
+import os
 import uuid
 from typing import Any
+from dotenv import load_dotenv
 import pyspark.sql
 import pyspark.sql.functions as f
 from lib import utils, config_loader
 import lib.transformations as tr
 from lib.logger import Log4j
+
+load_dotenv()
+
+KAFKA_API_KEY: str = os.environ.get("KAFKA_API_KEY")
+KAFKA_API_SECRET: str = os.environ.get("KAFKA_API_SECRET")
 
 if __name__ == '__main__':
 
@@ -59,3 +66,15 @@ if __name__ == '__main__':
         f.to_json(f.struct("*")).alias("value")
     )
     logger.info("Finished transforming the tables")
+
+    logger.info("Sending data to Kafka")
+    kafka_kv_df.write \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", conf["kafka.bootstrap.servers"]) \
+        .option("topic", conf["kafka.topic"]) \
+        .option("kafka.security.protocol", conf["kafka.security.protocol"]) \
+        .option("kafka.sasl.jaas.config", conf["kafka.sasl.jaas.config"].format(KAFKA_API_KEY, KAFKA_API_SECRET)) \
+        .option("kafka.sasl.mechanism", conf["kafka.sasl.mechanism"]) \
+        .option("kafka.client.dns.lookup", conf["kafka.client.dns.lookup"]) \
+        .save()
+    logger.info("Finished sending data to Kafka")
